@@ -4,30 +4,21 @@ const htmlWebpackPlugin = require('html-webpack-plugin');
 const outputFileName = 'bundle';
 const port = 4000;
 
-const _dist = path.resolve(__dirname, 'dist');
+const _dist = path.resolve(__dirname, 'dist/client');
 const _src = path.resolve(__dirname, 'src/frontend');
 
 let config = {
     context: path.resolve(__dirname, './'),
 
-    entry: [ path.join(_src, 'index.ts') ],
+    entry: {
+        "index": path.join(_src, 'index.ts')
+    },
 
     output: {
         path: _dist,
-        filename: outputFileName + '.js',
-        publicPath: '/dist/'
+        filename: '[name].' + outputFileName + '.js',
+        publicPath: '/static/'
     },
-
-    // webpack-dev-server config, see: https://webpack.github.io/docs/webpack-dev-server.html
-    devServer: {
-        contentBase: _dist,
-        hot: true,
-        inline: true,
-        port: port
-    },
-
-    // http://webpack.github.io/docs/configuration.html#devtool
-    devtool: '#eval-source-map',
 
     resolve: {
         extensions: ['.js', '.ts', '.json' ,'.vue'],
@@ -40,6 +31,9 @@ let config = {
         loaders: [
             { test: /\.html$/, loader: 'html-loader' },
             { test: /\.pug$/, loader: 'pug-loader' },
+            { test: /\.css$/, loader:
+                'style-loader?sourceMap=true!css-loader?sourceMap=true'
+            },
             { test: /\.sass$/, loader:
                 'style-loader?sourceMap=true!css-loader?sourceMap=true!sass-loader?indentedSyntax&sourceMap=true'
             },
@@ -58,7 +52,8 @@ let config = {
                             'vue-style-loader?sourceMap=true!css-loader?sourceMap=true!sass-loader?indentedSyntax&sourceMap=true'
                     }
                 }
-            }
+            },
+            { test: /\.(jp(e?)g|png|gif|svg)$/, loaders: 'file-loader?name=resources/img/[name].[ext]' }
         ]
     },
 
@@ -78,39 +73,54 @@ let config = {
 
 // When use in production (npm run build)
 if (process.env.NODE_ENV === 'production') {
-
-    // You may want to use different name for production
-    // config.output.filename = outputFileName + '.min.js'
-    
-    // still need babel for production stage since uglifyJs not support es6
-    config.module.loaders = (config.module.loaders || []).concat([
-        { test: /\.ts(x?)$/, loader: 'babel-loader?presets[]=es2015!ts-loader' },
-        { test: /\.js$/, loader: 'babel-loader', query: { presets: ['es2015'] } }
-    ])
-
-    config.devtool = '#source-map'
-
-    // https://vuejs.org/guide/deployment.html
+    /**
+     * https://vuejs.org/guide/deployment.html
+     */
     config.plugins = (config.plugins || []).concat([
         new webpack.DefinePlugin({
-        'process.env': {
-            NODE_ENV: '"production"'
-        }
+            'process.env': {
+                NODE_ENV: '"production"'
+            }
         }),
         new webpack.optimize.UglifyJsPlugin({
-        compress: {
-            warnings: false
-        }
-        }),
-        new webpack.optimize.OccurrenceOrderPlugin()
-    ])
-
+            sourceMap: false,
+            mangle: {
+                // Vue Componentが動かなくなる対策
+                keep_fnames: true
+            },
+            ecma: 8,
+            compress: {
+                warnings: false
+            }
+        })
+    ]);
 } else {
+    config.devtool = '#eval-source-map';
+    config.plugins = (config.plugins || []).concat([
+        new webpack.DefinePlugin({
+            'process.env': {
+                NODE_ENV: '"development"'
+            }
+        }),
+    ]);
 
-    config.module.loaders = config.module.loaders.concat([
-        { test: /\.ts(x?)$/, loader: 'ts-loader' }
-    ])
+    /**
+     * webpack-dev-server config
+     * see: https://webpack.github.io/docs/webpack-dev-server.html
+     */
 
+    // webpack-dev-server config, see: https://webpack.github.io/docs/webpack-dev-server.html
+    config.devServer = {
+        contentBase: _dist,
+        hot: true,
+        inline: true,
+        port: port,
+        proxy: {
+            "/api/*": {
+              target: "http://localhost:8080/api/*"
+            }
+        }
+    };
 }
 
 

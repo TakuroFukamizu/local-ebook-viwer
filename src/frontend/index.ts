@@ -1,11 +1,54 @@
 import Vue from 'vue';
-import View1 from './components/view1.vue';
+import Vuex from 'vuex';
+import VueRouter from 'vue-router';
 
-// コンポーネントをグローバルに登録
-Vue.component('view-1', View1);
+import VueMaterial from 'vue-material';
+import 'vue-material/dist/vue-material.min.css';
+import 'vue-material/dist/theme/default.css';
+
+import VueSessionStorage from 'vue-sessionstorage';
+
+import routes from './routes';
+import App from './components/App';
+import SkFoldingCube from './components/widgets/SkFoldingCube';
+
+// ------------
+
+Vue.component('App', App);
+Vue.component('sk-folding-cube', SkFoldingCube);
+
+Vue.use(VueMaterial);
+Vue.use(VueSessionStorage);
+Vue.use(VueRouter);
+
+const router = new VueRouter(routes);
+
+// event bus
+const bus = new Vue();
+
+Vue.use(Vuex);
+const store = new Vuex.Store({
+    state: {
+        pageIndex: 0,
+        canReload: false
+    },
+    mutations: {
+        increment (state) {
+            state.pageIndex++
+        },
+        showReload(state) {
+            state.canReload = true;
+        },
+        hideReload(state) {
+            state.canReload = false;
+        }
+    }
+  })
 
 // ルートVueインスタンス
-class App extends Vue {
-    msg = 'there';
-}
-new App().$mount('#app'); //index.htmlのエントリーポイントをマウントする
+const rootConfig = {
+    template: '<App ref="app" />',
+    router,
+    store
+};
+new Vue(rootConfig).$mount('#app'); //index.htmlのエントリーポイントをマウントする

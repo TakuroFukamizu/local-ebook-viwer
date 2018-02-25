@@ -1,29 +1,44 @@
 // import * as cors from 'cors';
 import * as express from 'express';
-import ApiController from './api';
-import WatchDir from './watchDir';
+import * as path from 'path';
+import ApiController from './controller/api';
+import IndexController from './controller/indexPage';
+import BookDir from './biz/bookDir';
+import * as cors from 'cors';
+
+if (process.env.CONTENST_ROOT == undefined) throw new Error("CONTENST_ROOT is empty");
 
 const port = process.env.PORT || 80;
-const clientDir = process.env.CLIENT_DIR || "./client";
+const clientDir = process.env.CLIENT_DIR || path.resolve(__dirname, 'client');
+const contetnsDir = process.env.CONTENST_ROOT || './';
 
-let files: Array<string> = [];
+// let files: Array<string> = [];
+
 
 let app = express();
+app.use(cors());
+app.use('/api', ApiController());
+app.use('/static', express.static(clientDir));
+app.use('/', IndexController(clientDir));
 
-app.use(ApiController(files));
-app.use(express.static(clientDir));
-
-app.listen(port);
-
-const skillWatchDir = new WatchDir('/home/pi/testdir'); //ホームディレクトリ直下のtestdirを監視
-skillWatchDir.on(WatchDir.EVENT_NEW_FILE, (file) => {
-    console.log(file);
-    // let payload = {
-    //     name: file.name,
-    //     filepath: file.filepath,
-    //     ext: file.ext,
-    //     mime: file.mime
-    // };
-    files = skillWatchDir.getFiles();
+const server = app.listen(port, () => {
+    console.info(`Node.js is listening to PORT: ${server.address().port}`);
 });
+
+let bookDir = BookDir.getInstance();
+bookDir.setPath(contetnsDir);
+bookDir.detectBooks().then(() => {
+    console.info(`book entory is loaded : ${bookDir.getBookList().length}`);
+});
+// const skillWatchDir = new WatchDir(contetnsDir);
+// skillWatchDir.on(WatchDir.EVENT_NEW_FILE, (file) => {
+//     console.log(file);
+//     // let payload = {
+//     //     name: file.name,
+//     //     filepath: file.filepath,
+//     //     ext: file.ext,
+//     //     mime: file.mime
+//     // };
+//     files = skillWatchDir.getFiles();
+// });
 

@@ -1,0 +1,8 @@
+{
+  "watch": ["src/backend"],
+  "ext": "ts",
+  "ignore": ["src/**/*.spec.ts"],
+  "exec": "$(npm bin)/ts-node ./src/backend/app.ts",
+  "inspect": true,
+  "verbose": true
+}

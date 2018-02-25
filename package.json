@@ -31,6 +31,7 @@
     "vue-material": "^1.0.0-beta-8",
     "vue-router": "^3.0.1",
     "vue-sessionstorage": "^1.0.0",
+    "vue2-touch": "^1.0.6",
     "vuex": "^3.0.1"
   },
   "devDependencies": {

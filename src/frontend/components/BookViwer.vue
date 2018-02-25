@@ -10,15 +10,11 @@ div
             .md-layout-item.md-size-100
                 //- img(v-bind:src="pages[currentPageIndex].data")
                 //- span {{pages[currentPageIndex].filepath}}
-                img(v-bind:src="currentPage.data")
+                img(v-bind:src="currentPage.data" v-touch:swipe="onSwipe")
                 span {{currentPage.filepath}}
         .md-layout
             .md-layout-item.md-size-95
                 md-progress-bar(md-mode="determinate", :md-value="pageProgress")
-        .md-layout.md-alignment-bottom-center
-            md-bottom-bar(md-sync-route)
-                md-bottom-bar-item(v-on:click="prev()", md-label="PREV", md-icon="chevron_left")
-                md-bottom-bar-item(v-on:click="next()", md-label="NEXT", md-icon="chevron_right")
         md-speed-dial.md-bottom-right(md-event="click")
             md-speed-dial-target
                 md-icon add
@@ -40,6 +36,7 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import Api from '../api/api';
 import {IBookEntry, IPageEntry} from '../../common/apiInterface';
+import { switchCase } from 'babel-types';
 
 
 
@@ -146,6 +143,17 @@ export default class BookViwer extends Vue {
     //         this.pages = pages;
     //     });
     // }
+
+    onSwipe(kind) {
+        console.info(`onSwipe(${kind})`);
+        switch(kind) {
+            case "swipeleft":
+                this.prev();
+                break;
+            case "swiperight":
+                this.next();
+        }
+    }
 
     async next() {
         if (!this.book) return;

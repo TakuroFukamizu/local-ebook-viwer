@@ -38,12 +38,12 @@ const bus = new Vue();
 Vue.use(Vuex);
 const store = new Vuex.Store({
     state: {
-        pageIndex: 0,
+        naviTitle: "Viewer",
         canReload: false
     },
     mutations: {
-        increment (state) {
-            state.pageIndex++
+        setNaviTitle(state, payload) {
+            state.naviTitle = payload;
         },
         showReload(state) {
             state.canReload = true;
@@ -51,6 +51,9 @@ const store = new Vuex.Store({
         hideReload(state) {
             state.canReload = false;
         }
+    },
+    getters: {
+        naviTitle(state) { return state.naviTitle; }
     }
   })
 

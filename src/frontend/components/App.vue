@@ -5,9 +5,9 @@ md-app.md-waterfall(md-mode="flexible")
             .md-toolbar-section-start
                 md-button.md-icon-button(@click="menuVisible = !menuVisible")
                     md-icon menu
-                router-link.md-title(:to="'/'") viwer
+                router-link.md-title(:to="'/'") {{ naviTitle() }}
             .md-toolbar-section-end
-                md-button.md-icon-button
+                md-button.md-icon-button(v-on:click="onRefresh")
                     md-icon refresh
                 md-button.md-icon-button
                     md-icon more_vert
@@ -29,6 +29,14 @@ import Component from 'vue-class-component';
 @Component({})
 export default class App extends Vue {
     menuVisible = false;
+
+    naviTitle():string {
+        return this.$store.state.naviTitle;
+    }
+
+    onRefresh() {
+        this.$emit('onRefresh');
+    }
 }
 </script>
 

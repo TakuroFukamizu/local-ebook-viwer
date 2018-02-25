@@ -7,13 +7,14 @@ div
     //-         span {{item.filepath}}
     template(v-if="loaded")
         .book-page.md-layout.md-alignment-center-center
-            .md-layout-item.md-size-100
+            .md-layout-item
                 //- img(v-bind:src="pages[currentPageIndex].data")
                 //- span {{pages[currentPageIndex].filepath}}
                 img(v-bind:src="currentPage.data" v-touch:swipe="onSwipe")
-                span {{currentPage.filepath}}
-        .md-layout
-            .md-layout-item.md-size-95
+                div.md-caption {{currentPage.filepath}}
+        .md-layout.md-alignment-center-center(style="margin-top:20px;")
+            .md-layout-item(style="text-align:center;")
+                div {{currentPageIndex + 1}} / {{maxPage}}
                 md-progress-bar(md-mode="determinate", :md-value="pageProgress")
         md-speed-dial.md-bottom-right(md-event="click")
             md-speed-dial-target
@@ -48,6 +49,7 @@ export default class BookViwer extends Vue {
 
     book: IBookEntry | null = null;
     pages: IPageEntry[] = []; //load順
+    maxPage = 0;
     currentPageIndex = 0;
     pageProgress = 0;
     currentPage: IPageEntry = { //初期データはダミー
@@ -80,6 +82,8 @@ export default class BookViwer extends Vue {
         let currentPageIndex = 0; //TODO:前回最終表示ページを取得
         let currentPage = await this.loadPage(currentPageIndex); //最初のページ
 
+        this.$store.commit('setNaviTitle', book.dirname); //naviのタイトルをディレクトリ名に
+
         this.$nextTick(() => { 
             console.log("on load page.");
             this._bookId = bookId;
@@ -87,6 +91,7 @@ export default class BookViwer extends Vue {
             // this.pages = pages;
             this.currentPage = currentPage;
             this.currentPageIndex = currentPageIndex;
+            this.maxPage = book.pages.length;
 
             this.loaded = true;
         });
@@ -157,23 +162,21 @@ export default class BookViwer extends Vue {
 
     async next() {
         if (!this.book) return;
-        let maxPage = this.book.pages.length;
         let value = this.currentPageIndex;
         value++;
-        if (maxPage <= value) return;
+        if (this.maxPage <= value) return;
 
         let currentPage = await this.loadPage(value);
 
         this.$nextTick(() => { 
             this.currentPage = currentPage;
             this.currentPageIndex = value;
-            this.pageProgress = ((value + 1) / maxPage) * 100;
+            this.pageProgress = ((value + 1) / this.maxPage) * 100;
         });
     }
 
     async prev() {
         if (!this.book) return;
-        let maxPage = this.book.pages.length;
         let value = this.currentPageIndex;
         value--;
         if (value <= 0) return;
@@ -183,7 +186,7 @@ export default class BookViwer extends Vue {
         this.$nextTick(() => { 
             this.currentPage = currentPage;
             this.currentPageIndex = value;
-            this.pageProgress = ((value + 1) / maxPage) * 100;
+            this.pageProgress = ((value + 1) / this.maxPage) * 100;
         });
     }
 
@@ -203,6 +206,9 @@ export default class BookViwer extends Vue {
         @include max-screen($breakpoint-mobile)
             width: auto
             height: 500px
+        @include min-screen($breakpoint-tablet)
+            width: auto
+            height: 890px
         max-width: 100%
         max-height: 100%
 

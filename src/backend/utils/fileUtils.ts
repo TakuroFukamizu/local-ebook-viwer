@@ -31,7 +31,8 @@ export async function getFileInfo(filepath:string): Promise<FileInfoItem> {
     res.birthTimeMs = st.birthtimeMs;
     res.accessTimeMs = st.atimeMs;
     res.modifyTimeMs = st.mtimeMs;
-
+    if(st.isDirectory())  return res;
+    
     // mimetypeの取得
     const buffer = ReadChunk.sync(filepath, 0, 4100);
     let typeinfo = FileType(buffer);

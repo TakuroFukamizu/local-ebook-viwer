@@ -1,4 +1,4 @@
-# file-player
+# local-ebook-viwer
 
 image file viwer.
 

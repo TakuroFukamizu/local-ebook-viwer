@@ -73,7 +73,7 @@ export default function ApiController():any {
             }
             await book.loadPageBody(); //画像データをロード
             Reading.getInstance().currentBook = book;
-            responsejson(res, book);
+            responsejson(res, book.rawValue);
         } catch(ex) {
             console.error(ex);
             res.sendStatus(500).end();

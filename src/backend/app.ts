@@ -12,7 +12,6 @@ const port = process.env.PORT || 80;
 const clientDir = process.env.CLIENT_DIR || path.resolve(__dirname, 'client');
 const contetnsDir = process.env.CONTENST_ROOT || './';
 
-// let files: Array<string> = [];
 
 
 let app = express();

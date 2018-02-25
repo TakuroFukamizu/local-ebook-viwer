@@ -131,7 +131,11 @@ export default class BookDir extends events.EventEmitter {
                 title: b.title,
                 dirpath: b.dirpath,
                 dirname: b.dirname,
-                thumbnail: b.thumbnail
+                thumbnail: b.thumbnail,
+                pageNum: b.pageNum,
+                birthTimeMs: b.birthTimeMs,
+                accessTimeMs: b.accessTimeMs,
+                modifyTimeMs: b.modifyTimeMs
             } as IBookListEntry;
         });
     }

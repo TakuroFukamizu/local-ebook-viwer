@@ -9,9 +9,16 @@ export interface IStatus {
 
 export interface IBookEntry {
     id: string;
+    title: string;
     dirpath: string;
     dirname: string;
+
     pages: Array<IPageListEntry>;
+
+    pageNum: number;
+    birthTimeMs: number;
+    accessTimeMs: number; //最終アクセス時刻 (access time)
+    modifyTimeMs: number; //最終変更時刻 (modify time)
 }
 
 export interface IPageListEntry {
@@ -43,6 +50,12 @@ export interface IBookListEntry {
     title: string;
     dirpath: string;
     dirname: string;
+
     thumbnail: string;
+
+    pageNum: number;
+    birthTimeMs: number;
+    accessTimeMs: number; //最終アクセス時刻 (access time)
+    modifyTimeMs: number; //最終変更時刻 (modify time)
 }
 

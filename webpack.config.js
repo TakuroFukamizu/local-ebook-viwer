@@ -37,6 +37,7 @@ let config = {
             { test: /\.sass$/, loader:
                 'style-loader?sourceMap=true!css-loader?sourceMap=true!sass-loader?indentedSyntax&sourceMap=true'
             },
+            { test: /\.scss$/, loader: 'scss-loader' },
             {
                 test: /\.ts(x?)$/,
                 loader: 'ts-loader',
@@ -53,6 +54,7 @@ let config = {
                     }
                 }
             },
+            { test: /\.(eot|woff|woff2|svg|ttf)([\?]?.*)$/, loader: "file-loader" },
             { test: /\.(jp(e?)g|png|gif|svg)$/, loaders: 'file-loader?name=resources/img/[name].[ext]' }
         ]
     },

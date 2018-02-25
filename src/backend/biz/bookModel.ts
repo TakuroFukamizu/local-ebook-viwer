@@ -22,12 +22,43 @@ export default class BookModel implements IBookEntry {
         this.dirname = path.basename(dirpath);
     }
 
+    get rawValue(): IBookEntry {
+        let entry:IBookEntry = {
+            id:this.id,
+            title: this.title,
+            dirpath: this.dirpath,
+            dirname: this.dirname,
+            pages: this.pages,
+            pageNum: this.pageNum,
+            birthTimeMs: this.birthTimeMs,
+            accessTimeMs: this.accessTimeMs,
+            modifyTimeMs: this.modifyTimeMs
+        }
+        return entry;
+    }
+
     makeNewId() {
         this.id = uuid.v4();
     }
 
     get title():string {
         return this.dirname; //FIXME
+    }
+
+    get pageNum():number {
+        return this.pages.length;
+    }
+    
+    get birthTimeMs(): number {
+        return this.pages[0].birthTimeMs;
+    }
+
+    get accessTimeMs(): number {
+        return this.pages[0].accessTimeMs;
+    }
+
+    get modifyTimeMs(): number {
+        return this.pages[0].modifyTimeMs;
     }
 
     get thumbnail():string {

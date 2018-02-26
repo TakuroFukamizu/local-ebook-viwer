@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "export NODE_ENV='development' && webpack-dev-server --inline --hot",
+    "dev:frontend": "source ./.env && export NODE_ENV='development' && webpack-dev-server --inline --hot",
     "dev:backend": "source ./.env && $(npm bin)/nodemon --config nodemon.json",
     "build": "export NODE_ENV='production' && npm run clean && $(npm bin)/npm-run-all -p build:*",
     "build:frontend": "$(npm bin)/webpack",

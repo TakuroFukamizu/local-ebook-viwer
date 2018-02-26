@@ -2,6 +2,43 @@
 
 image file viwer.
 
+## run in local pc (develop)
+
+config `.env` file
+
+```sh
+export PORT=58080
+export CONTENST_ROOT=/path/to/documents/root
+```
+
+```sh
+# run backend in console 1
+$ npm run dev:backend
+
+# run frontend(with webpack dev server) in console 2
+$ npm run dev
+```
+
+open [http://localhost:4000/](http://localhost:4000/)
+
+## run in local pc (production build)
+
+config `.env` file
+
+```sh
+export PORT=58080
+export CONTENST_ROOT=/path/to/documents/root
+```
+
+```sh
+# build and run all
+$ npm run build
+$ npm run start_withenv
+```
+
+open [http://localhost:58080/](http://localhost:58080/)
+
+
 ## docker-compose.yml
 
 ```yaml

@@ -2,10 +2,12 @@ const path = require('path');
 const webpack = require('webpack');
 const htmlWebpackPlugin = require('html-webpack-plugin');
 const outputFileName = 'bundle';
-const port = 4000;
 
 const _dist = path.resolve(__dirname, 'dist/client');
 const _src = path.resolve(__dirname, 'src/frontend');
+console.log(process.env.FE_PORT);
+process.env.PORT = process.env.PORT || '';
+process.env.FE_PORT = process.env.FE_PORT || 4000;
 
 let config = {
     context: path.resolve(__dirname, './'),
@@ -69,6 +71,11 @@ let config = {
             favicon: path.join(_src, 'static' , 'favicon.ico'),
             inject: true,
         }),
+
+        new webpack.EnvironmentPlugin([
+            'NODE_ENV',
+            'PORT'
+        ])
     ]
 
 }
@@ -116,12 +123,7 @@ if (process.env.NODE_ENV === 'production') {
         contentBase: _dist,
         hot: true,
         inline: true,
-        port: port,
-        proxy: {
-            "/api/*": {
-              target: "http://localhost:8080/api/*"
-            }
-        }
+        port: process.env.FE_PORT,
     };
 }
 

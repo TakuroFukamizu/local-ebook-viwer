@@ -16,7 +16,10 @@ export default class Api {
             method: method,
             url: path
         };
-        config.baseURL = "http://localhost:58080"; //for debug
+        if (process.env.NODE_ENV == "development" && process.env.PORT != '') {
+            let port = parseInt(process.env.PORT||'80', 10);
+            config.baseURL = `http://localhost:${port}`; //for debug
+        }
         if (method == "get") config.params = requestData;
         if (method == "post" || method == "put") config.data = requestData;
         config.headers = {
@@ -56,10 +59,10 @@ export default class Api {
         return data as IPageEntry;
     }
 
-    async doRefreshBooks(): Promise<[IBookEntry]> {
+    async doRefreshBooks(): Promise<[IBookListEntry]> {
         let path = "/api/do/refresh";
         let data = await this._executeRequest("get", path);
-        let books = data.list.map((r:any) => r as IBookEntry);
+        let books = data.list.map((r:any) => r as IBookListEntry);
         return books;
     }
 }

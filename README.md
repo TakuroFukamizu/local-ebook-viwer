@@ -9,6 +9,7 @@ config `.env` file
 ```sh
 export PORT=58080
 export CONTENST_ROOT=/path/to/documents/root
+export FE_PORT=4000
 ```
 
 ```sh

@@ -50,7 +50,7 @@ export default class BookList extends Vue {
         console.log("on create page");
         console.log(this.$parent);
         this.$parent.$on('onRefresh', () => {
-            this.loadBooks();
+            this.loadBooks(true); //再取得
         });
     }
     async mounted() {
@@ -70,9 +70,9 @@ export default class BookList extends Vue {
     }
 
     // methodsメンバー =======================
-    async loadBooks() {
+    async loadBooks(needRefresh:boolean=false) {
         let api = new Api();
-        let books = await api.getBooks();
+        let books = needRefresh ? await api.doRefreshBooks() : await api.getBooks();
         console.log(books);
 
         this.$store.commit('setNaviTitle', `${books.length} books`); //naviのタイトルをディレクトリ名に

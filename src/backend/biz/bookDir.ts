@@ -53,20 +53,17 @@ export default class BookDir extends events.EventEmitter {
         });
     }
 
-    async detectBooks(target:string|null=null): Promise<void> {
+    async detectBooks(target:string|null=null, needRefresh:boolean=true): Promise<void> {
         let targetPath = target ? target : this._path;
         console.info('detectBooks', targetPath);
 
         if (this._loading) return Promise.reject(new Error("loading"));
 
         this._loading = true;
-        this._files = [];
+        if (needRefresh) this._files = [];
         let status = false;
         try {
-            await this._proc(targetPath);
-            for(let b of this._files) {
-                b.makeNewId(); // TODO: DBと照合し、重複なきものだけやる
-            }
+            await this._proc(targetPath, needRefresh);
             this._loading = false;
             status = true;
         } catch(ex) {
@@ -78,7 +75,7 @@ export default class BookDir extends events.EventEmitter {
     }
 
 
-    async _proc(currentDir:string): Promise<void> {
+    async _proc(currentDir:string, needRefresh:boolean): Promise<void> {
         console.log('_proc', currentDir);
         // ディレクトリの内容確認
         let files = await readdir(currentDir);
@@ -108,6 +105,17 @@ export default class BookDir extends events.EventEmitter {
                 images.push(fileinfo);
             }
         }
+        // 重複スキップ(on memory)
+        if (!needRefresh) { // TODO: bookフォルダ自体がネストする場合はこれ修正必要
+            let exist = false;
+            for (let f of this._files) {
+                if (currentDir == f.dirpath) {
+                    exist = true;
+                    break;
+                }
+            }
+            if (exist) return; //スキップ
+        }
         // bookフォルダ or 親フォルダ
         if (hasHtml) { //現状、htmlフォルダーは対応しない
             return;
@@ -116,11 +124,12 @@ export default class BookDir extends events.EventEmitter {
             console.log(images.length, 'image detected', currentDir);
             let entry = new BookModel(currentDir);
             await entry.addImages(images);
+            entry.makeNewId(); // TODO: DBと照合し、重複なきものだけやる
             this._files.push(entry);
             return;
         } else {
             // サブディレクトリを再帰で解析
-            return Promise.all(dirs.map((d) => this._proc(d))).then(() => { return });
+            return Promise.all(dirs.map((d) => this._proc(d, needRefresh))).then(() => { return });
         }
     }
 

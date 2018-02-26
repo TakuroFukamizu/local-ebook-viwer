@@ -30,7 +30,8 @@ export default function ApiController():any {
             if (bookDir.isStillLoading()) {
                 await bookDir.waitLoading(); //再取得はしない
             } else {
-                await bookDir.detectBooks();
+                await bookDir.detectBooks(null, false); //api呼び出しの場合は洗い替えをしない
+                // TODO: オプション対応
             }
             let books = bookDir.getBookList();
             responsejson(res, { list: books });

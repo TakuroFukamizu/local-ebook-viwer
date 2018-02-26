@@ -57,5 +57,9 @@ export default class App extends Vue {
 .grand-back
     background: rgba(#000, .06)
     // height:calc(100% +300px)
+    margin: 0 !important
+    width: 100% !important
+    min-height: 100% !important
+    height: auto
 
 </style>

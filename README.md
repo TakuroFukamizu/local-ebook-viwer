@@ -17,7 +17,7 @@ export FE_PORT=4000
 $ npm run dev:backend
 
 # run frontend(with webpack dev server) in console 2
-$ npm run dev
+$ npm run dev:frontend
 ```
 
 open [http://localhost:4000/](http://localhost:4000/)

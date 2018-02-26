@@ -1,11 +1,12 @@
 const path = require('path');
 const webpack = require('webpack');
 const htmlWebpackPlugin = require('html-webpack-plugin');
+const BabiliPlugin = require("babili-webpack-plugin");
 const outputFileName = 'bundle';
 
 const _dist = path.resolve(__dirname, 'dist/client');
 const _src = path.resolve(__dirname, 'src/frontend');
-console.log(process.env.FE_PORT);
+
 process.env.PORT = process.env.PORT || '';
 process.env.FE_PORT = process.env.FE_PORT || 4000;
 
@@ -91,16 +92,19 @@ if (process.env.NODE_ENV === 'production') {
                 NODE_ENV: '"production"'
             }
         }),
-        new webpack.optimize.UglifyJsPlugin({
-            sourceMap: false,
-            mangle: {
-                // Vue Componentが動かなくなる対策
-                keep_fnames: true
-            },
-            ecma: 8,
-            compress: {
-                warnings: false
-            }
+        // new webpack.optimize.UglifyJsPlugin({
+        //     sourceMap: false,
+        //     mangle: {
+        //         // Vue Componentが動かなくなる対策
+        //         keep_fnames: true
+        //     },
+        //     ecma: 8,
+        //     compress: {
+        //         warnings: false
+        //     }
+        // })
+        new BabiliPlugin({}, {
+            sourceMap: false
         })
     ]);
 } else {

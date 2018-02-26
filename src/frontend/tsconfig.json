@@ -4,11 +4,13 @@
     "strict": true,
     "module": "es2015",
     "moduleResolution": "node",
-    "lib": [ "es2015" ],
+    "declaration": false,
+    "lib": [ "es2016", "es2015", "dom" ],
     "noImplicitAny": false,
     "experimentalDecorators": true
   },
   "includes": [
-      "node_modules/@types/**/*.d.ts"
+      "node_modules/@types/**/*.d.ts",
+      "src/frontend/dts/**/*.d.ts"
   ]
 }

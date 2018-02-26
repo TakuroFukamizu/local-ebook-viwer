@@ -9,7 +9,7 @@ import * as cors from 'cors';
 if (process.env.CONTENST_ROOT == undefined) throw new Error("CONTENST_ROOT is empty");
 
 const port = process.env.PORT || 80;
-const clientDir = process.env.CLIENT_DIR || path.resolve(__dirname, 'client');
+const clientDir = process.env.CLIENT_DIR || path.resolve(__dirname, '../client');
 const contetnsDir = process.env.CONTENST_ROOT || './';
 
 

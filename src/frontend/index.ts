@@ -13,13 +13,13 @@ import 'webpack-md-icons';
 import Vue2Touch from 'vue2-touch';
 
 import VueSessionStorage from 'vue-sessionstorage';
+import VueLocalStorage from 'vue-localstorage';
 
 import routes from './routes';
 import StateStore from './model/StateStore';
 
 import App from './components/App';
 import SkFoldingCube from './components/widgets/SkFoldingCube';
-
 
 // ------------
 
@@ -29,13 +29,14 @@ Vue.component('sk-folding-cube', SkFoldingCube);
 Vue.use(VueMaterial);
 // Vue.material.registerTheme('default', {primary: 'blue'});
 Vue.use(VueSessionStorage);
+Vue.use(VueLocalStorage);
 Vue.use(VueRouter);
 Vue.use(Vue2Touch, {}); //configがundefinedだと ./node_modules/vue2-touch/directive.js でエラーになる
 
 const router = new VueRouter(routes);
 
 
-Vue.use(Vuex);
+// Vue.use(Vuex);
 
 // ルートVueインスタンス
 const rootConfig = {

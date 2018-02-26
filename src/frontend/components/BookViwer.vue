@@ -6,12 +6,12 @@ div
     //-         img(v-bind:src="item.data")
     //-         span {{item.filepath}}
     template(v-if="loaded")
-        .book-page.md-layout.md-alignment-center-center
-            .md-layout-item
-                //- img(v-bind:src="pages[currentPageIndex].data")
-                //- span {{pages[currentPageIndex].filepath}}
-                img(v-bind:src="currentPage.data" v-touch:swipe="onSwipe")
-                div.md-caption {{currentPage.filepath}}
+        .book-page.md-layout.md-gutter.md-alignment-center-center
+            .page-body.md-layout-item
+                div(style="margin-left:auto; margin-right:auto;" v-touch:swipe="onSwipe")
+                    img(v-bind:src="currentPage.data")
+                //- div.md-caption {{currentPage.filepath}}
+                //- div.md-caption {{currentPage.name}}
         .md-layout.md-alignment-center-center(style="margin-top:20px;")
             .md-layout-item(style="text-align:center;")
                 div {{currentPageIndex + 1}} / {{maxPage}}
@@ -38,7 +38,7 @@ import Component from 'vue-class-component';
 import Api from '../api/api';
 import {IBookEntry, IPageEntry} from '../../common/apiInterface';
 import { switchCase } from 'babel-types';
-
+import LocalData from '../model/LocalData';
 
 
 @Component({})
@@ -79,7 +79,11 @@ export default class BookViwer extends Vue {
         let book = await this._api.getBook(bookId);
         this.book = book;
         console.log(book);
-        let currentPageIndex = 0; //TODO:前回最終表示ページを取得
+
+        let currentPageIndex = 0;
+        let lastPageIndex = LocalData.getLastPageIndex(bookId, 0);
+        if (lastPageIndex != -1) currentPageIndex = lastPageIndex; //読了以外なら反映
+        // let currentPageIndex = 0; //TODO:前回最終表示ページを取得
         let currentPage = await this.loadPage(currentPageIndex); //最初のページ
 
         this.$store.commit('setNaviTitle', book.dirname); //naviのタイトルをディレクトリ名に
@@ -98,8 +102,9 @@ export default class BookViwer extends Vue {
     }
 
     private async loadPage(i:number): Promise<IPageEntry> {
+        console.info(`loadPage${i}`);
         if (!this.book) throw new Error("invalid operation");
-
+        
         let key = this.book.pages[i].filepath;
         for(let p of this.pages) {
             if(p.filepath == key) {
@@ -110,7 +115,7 @@ export default class BookViwer extends Vue {
         // if (this.$session.exists(key)) {
         //     let data = this.$session.get(key);
         //     console.info("load from sessionStorage");
-        //     return { filepath: key, mime: "", data } as IPageEntry;
+        //     return { filepath: key, name:"", mime: "", data } as IPageEntry;
         // }
 
         console.info("load from api");
@@ -167,6 +172,13 @@ export default class BookViwer extends Vue {
         if (this.maxPage <= value) return;
 
         let currentPage = await this.loadPage(value);
+        if (this.maxPage <= (value+1)) {
+            setTimeout(() => {
+                this.loadPage(value+1); //次ページ先読み
+            }, 500);
+        }
+
+        LocalData.setLastPageIndex(this.book.id, value);
 
         this.$nextTick(() => { 
             this.currentPage = currentPage;
@@ -182,6 +194,11 @@ export default class BookViwer extends Vue {
         if (value <= 0) return;
 
         let currentPage = await this.loadPage(value);
+        if (value != (this.maxPage+1)) {
+            LocalData.setLastPageIndex(this.book.id, value);
+        } else {
+            LocalData.setLastPageIndex(this.book.id, -1); //読了
+        }
 
         this.$nextTick(() => { 
             this.currentPage = currentPage;
@@ -202,15 +219,22 @@ export default class BookViwer extends Vue {
 .book-page
     width: 100%
     height: 100%
+
+.page-body
     img
         @include max-screen($breakpoint-mobile)
             width: auto
             height: 500px
         @include min-screen($breakpoint-tablet)
             width: auto
-            height: 890px
+            height: $breakpoint-tablet
         max-width: 100%
         max-height: 100%
+    &:after
+        width: 100%
+        height: 100%
+        display: block
+        content: " "
 
 .phone-viewport
     width: 100%

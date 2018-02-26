@@ -15,6 +15,8 @@ import Vue2Touch from 'vue2-touch';
 import VueSessionStorage from 'vue-sessionstorage';
 
 import routes from './routes';
+import StateStore from './model/StateStore';
+
 import App from './components/App';
 import SkFoldingCube from './components/widgets/SkFoldingCube';
 
@@ -32,35 +34,13 @@ Vue.use(Vue2Touch, {}); //configがundefinedだと ./node_modules/vue2-touch/dir
 
 const router = new VueRouter(routes);
 
-// event bus
-const bus = new Vue();
 
 Vue.use(Vuex);
-const store = new Vuex.Store({
-    state: {
-        naviTitle: "Viewer",
-        canReload: false
-    },
-    mutations: {
-        setNaviTitle(state, payload) {
-            state.naviTitle = payload;
-        },
-        showReload(state) {
-            state.canReload = true;
-        },
-        hideReload(state) {
-            state.canReload = false;
-        }
-    },
-    getters: {
-        naviTitle(state) { return state.naviTitle; }
-    }
-  })
 
 // ルートVueインスタンス
 const rootConfig = {
     template: '<App ref="app" />',
     router,
-    store
+    store: StateStore
 };
 new Vue(rootConfig).$mount('#app'); //index.htmlのエントリーポイントをマウントする

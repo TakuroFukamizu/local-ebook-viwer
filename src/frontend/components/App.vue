@@ -35,7 +35,7 @@ export default class App extends Vue {
     }
 
     onRefresh() {
-        this.$emit('onRefresh');
+        this.$store.state.eventBus.$emit('onRefresh');
     }
 }
 </script>

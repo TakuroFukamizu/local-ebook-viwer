@@ -49,7 +49,7 @@ export default class BookList extends Vue {
     created() {
         console.log("on create page");
         console.log(this.$parent);
-        this.$parent.$on('onRefresh', () => {
+        this.$store.state.eventBus.$on('onRefresh', () => {
             this.loadBooks(true); //再取得
         });
     }

@@ -30,13 +30,20 @@ div.md-layout.md-gutter.md-alignment-center
         //-                 md-button.md-icon-button
         //-                     md-icon menu
         //-             span Created at: {{ toLocaleTime(item.birthTimeMs) }}, Modified at: {{ toLocaleTime(item.modifyTimeMs) }}
+    //- infinite-loading(@infinite="infiniteHandler" spinner="waveDots")
+    //- div(v-infinite-scroll="loadMore" infinite-scroll-disabled="busy" infinite-scroll-distance="10")
+    button(@click="loadMore") more
 </template>
 
 <script lang='ts'>
 import Vue from 'vue';
 import Component from 'vue-class-component';
+// import InfiniteLoading from 'vue-infinite-loading';
+import infiniteScroll from 'vue-infinite-scroll';
 import Api from '../api/api';
 import {IBookListEntry} from '../../common/apiInterface';
+
+// Vue.component('infinite-loading', InfiniteLoading);
 
 @Component({})
 export default class BookList extends Vue {
@@ -45,18 +52,43 @@ export default class BookList extends Vue {
     books: Array<IBookListEntry> = [];
     selectedBookId: string = '';
 
+    _cursorNext = 0;
+    _loadBooksUnit = 10;
+
+    private busy = false;
+
+    // components = { InfiniteLoading };
+
     // methodsメンバー(vue) =======================
     created() {
         console.log("on create page");
-        console.log(this.$parent);
+        
+        this._cursorNext = 0;
+        this._loadBooksUnit = 10;
+
         this.$store.state.eventBus.$on('onRefresh', () => {
+            this.$store.commit('isLoadingStart');
             this.loadBooks(true); //再取得
+            this.$store.commit('isLoadingEnd');
         });
     }
     async mounted() {
         console.log("on load page.");
-        this.loadBooks();
+        this.$store.commit('isLoadingStart');
+
+        await this.loadBooks();
         // api.getStatus();
+
+        this.$store.commit('isLoadingEnd');
+    }
+    async loadMore() {
+        this.busy = true;
+        await this.loadBooks();
+        this.busy = false;
+    }
+    async infiniteHandler($state) {
+        await this.loadBooks();
+        $state.loaded();
     }
 
     // methodsメンバー(router) =======================
@@ -72,14 +104,25 @@ export default class BookList extends Vue {
     // methodsメンバー =======================
     async loadBooks(needRefresh:boolean=false) {
         let api = new Api();
-        let books = needRefresh ? await api.doRefreshBooks() : await api.getBooks();
-        console.log(books);
+        const start = this._cursorNext;
+        const limit = this._loadBooksUnit;
+        let books:IBookListEntry[]|null = null;
+        if (needRefresh) {
+            books = await api.doRefreshBooks(limit);
+            this._cursorNext = 0;
+            this.books = books;
+        } else {
+            books = await api.getBooks(start, limit);
+            books = this.books.concat(books);
+        }
+        if (!books) return;
+        this._cursorNext = books.length;
 
         this.$store.commit('setNaviTitle', `${books.length} books`); //naviのタイトルをディレクトリ名に
 
         // this.$store.mutations.showReload(); 
         this.$nextTick(() => {
-            this.$nextTick(() => { this.books = books });
+            this.books = books || [];
         });
     }
 

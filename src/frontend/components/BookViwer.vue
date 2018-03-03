@@ -1,35 +1,25 @@
 <template lang='pug'>
 div
-    //- button(v-on:click="loadPages") Load books
-    //- ul
-    //-     li(v-for="item in pages")
-    //-         img(v-bind:src="item.data")
-    //-         span {{item.filepath}}
-    template(v-if="loaded")
-        .book-page.md-layout.md-gutter.md-alignment-center-center
-            .page-body.md-layout-item
-                div(style="margin-left:auto; margin-right:auto;" v-touch:swipe="onSwipe")
-                    img(v-bind:src="currentPage.data")
-                //- div.md-caption {{currentPage.filepath}}
-                //- div.md-caption {{currentPage.name}}
-        .md-layout.md-alignment-center-center(style="margin-top:20px;")
-            .md-layout-item(style="text-align:center;")
-                div {{currentPageIndex + 1}} / {{maxPage}}
-                md-progress-bar(md-mode="determinate", :md-value="pageProgress")
-        md-speed-dial.md-bottom-right(md-event="click")
-            md-speed-dial-target
-                md-icon add
-            md-speed-dial-content
-                md-button.md-icon-button
-                    md-icon note
-                md-button.md-icon-button
-                    md-icon favorite
-                md-button.md-icon-button(v-on:click="backToHome()")
-                    md-icon close
-
-    template(v-else)
-        .md-layout.md-alignment-center-center
-            sk-folding-cube.md-layout-item.md-size-50
+    .book-page.md-layout.md-gutter.md-alignment-center-center
+        .page-body.md-layout-item
+            div(style="margin-left:auto; margin-right:auto;" v-touch:swipe="onSwipe")
+                img(v-bind:src="currentPage.data")
+            //- div.md-caption {{currentPage.filepath}}
+            //- div.md-caption {{currentPage.name}}
+    .md-layout.md-alignment-center-bottom(style="margin-top:20px;")
+        .md-layout-item(style="text-align:center;")
+            div {{currentPageIndex + 1}} / {{maxPage}}
+            md-progress-bar(md-mode="determinate", :md-value="pageProgress")
+    md-speed-dial.md-bottom-right(md-event="click")
+        md-speed-dial-target
+            md-icon add
+        md-speed-dial-content
+            md-button.md-icon-button
+                md-icon note
+            md-button.md-icon-button
+                md-icon favorite
+            md-button.md-icon-button(v-on:click="backToHome()")
+                md-icon close
 </template>
 
 <script lang='ts'>
@@ -40,15 +30,17 @@ import {IBookEntry, IPageEntry} from '../../common/apiInterface';
 import { switchCase } from 'babel-types';
 import LocalData from '../model/LocalData';
 
-
+interface IPageStatus {
+    index: number;
+    isLoading: boolean;
+    isLoaded: boolean;
+}
 @Component({})
 export default class BookViwer extends Vue {
     // dataメンバー =======================
-
-    loaded = false;
-
     book: IBookEntry | null = null;
     pages: IPageEntry[] = []; //load順
+    pagesStatus: IPageStatus[] = [];
     maxPage = 0;
     currentPageIndex = 0;
     pageProgress = 0;
@@ -65,8 +57,12 @@ export default class BookViwer extends Vue {
     private _api = new Api();
     private _bookId: string = '';
 
+    EVENT_CANCEL_PRELOAD = 'cancel_preload';
+
     // methodsメンバー(vue) =======================
     async mounted() {
+        this.$store.commit('isLoadingStart');
+
         this._api = new Api();
 
         // this.$nextTick(() => {
@@ -79,6 +75,9 @@ export default class BookViwer extends Vue {
         let book = await this._api.getBook(bookId);
         this.book = book;
         console.log(book);
+        this.pagesStatus = book.pages.map((p, i) => {
+            return { index: i, isLoading: false, isLoaded: false } as IPageStatus;
+        });
 
         let currentPageIndex = 0;
         let lastPageIndex = LocalData.getLastPageIndex(bookId, 0);
@@ -86,10 +85,13 @@ export default class BookViwer extends Vue {
         // let currentPageIndex = 0; //TODO:前回最終表示ページを取得
         let currentPage = await this.loadPage(currentPageIndex); //最初のページ
 
+        this.preload();
+
         this.$store.commit('setNaviTitle', book.dirname); //naviのタイトルをディレクトリ名に
 
         this.$nextTick(() => { 
             console.log("on load page.");
+
             this._bookId = bookId;
             this.book = book;
             // this.pages = pages;
@@ -97,8 +99,33 @@ export default class BookViwer extends Vue {
             this.currentPageIndex = currentPageIndex;
             this.maxPage = book.pages.length;
 
-            this.loaded = true;
+            this.$store.commit('isLoadingEnd');
         });
+    }
+
+    private cancelPreload() {
+        this.$emit(this.EVENT_CANCEL_PRELOAD);
+    }
+
+    private preload() {
+        const book = this.book;
+        if (!book) return;
+        let canceled = false;
+        this.$on(this.EVENT_CANCEL_PRELOAD, () => {
+            canceled = true;
+        })
+        setTimeout(async () => {
+            for (const {p, i} of book.pages.map((p, i) => ({ p, i }))) {
+                if (canceled) break;
+                if (this.pagesStatus[i].isLoading || this.pagesStatus[i].isLoaded) {
+                    continue; //処理不要
+                }
+                this.pagesStatus[i].isLoading = true;
+                await this.loadPage(i);
+                this.pagesStatus[i].isLoading = false;
+                this.pagesStatus[i].isLoaded = true;
+            }
+        }, 500);
     }
 
     private async loadPage(i:number): Promise<IPageEntry> {
@@ -119,8 +146,14 @@ export default class BookViwer extends Vue {
         // }
 
         console.info("load from api");
+        this.pagesStatus[i].isLoading = true;
+        this.pagesStatus[i].isLoaded = false;
+
         let page = await this._api.getPageBody(this._bookId, i);
         this.pages.push(page);
+
+        this.pagesStatus[i].isLoading = false;
+        this.pagesStatus[i].isLoaded = true;
         //sessionStorageを使ってキャッシュする
         // this.$session.set(key, page.data);
         return page;
@@ -132,8 +165,9 @@ export default class BookViwer extends Vue {
         // TODO リストのロード
     }
 
-    beforeRouteLeave () {
+    beforeRouteLeave (to, from, next) {
         console.log('beforeRouteLeave');
+        this.cancelPreload();
     }
 
     // methodsメンバー =======================
@@ -172,11 +206,11 @@ export default class BookViwer extends Vue {
         if (this.maxPage <= value) return;
 
         let currentPage = await this.loadPage(value);
-        if (this.maxPage <= (value+1)) {
-            setTimeout(() => {
-                this.loadPage(value+1); //次ページ先読み
-            }, 500);
-        }
+        // if (this.maxPage <= (value+1)) {
+        //     setTimeout(() => {
+        //         this.loadPage(value+1); //次ページ先読み
+        //     }, 500);
+        // }
 
         LocalData.setLastPageIndex(this.book.id, value);
 
@@ -191,7 +225,7 @@ export default class BookViwer extends Vue {
         if (!this.book) return;
         let value = this.currentPageIndex;
         value--;
-        if (value <= 0) return;
+        if (value < 0) return;
 
         let currentPage = await this.loadPage(value);
         if (value != (this.maxPage+1)) {
@@ -218,33 +252,19 @@ export default class BookViwer extends Vue {
 @import "../styles/vars"
 .book-page
     width: 100%
-    height: 100%
+    height: calc(100vh - 150px) //FIXME
+    padding-left: 0px
+    padding-right: 0px
+    margin-left: 0px
+    margin-right: 0px
 
 .page-body
     img
-        @include max-screen($breakpoint-mobile)
-            width: auto
-            height: 500px
-        @include min-screen($breakpoint-tablet)
-            width: auto
-            height: $breakpoint-tablet
-        max-width: 100%
-        max-height: 100%
-    &:after
-        width: 100%
-        height: 100%
         display: block
-        content: " "
+        max-width: 100%
+        max-height: calc(100% - 80px)
+        width: auto
+        height: auto
 
-.phone-viewport
-    width: 100%
-    height: 100%
-    // width: 322px;
-    // height: 200px;
-    display: inline-flex
-    align-items: flex-end
-    overflow: hidden
-    border: 1px solid rgba(#000, .26)
-    background: rgba(#000, .06)
 
 </style>

@@ -39,10 +39,10 @@ export default class Api {
         return data as IStatus;
     }
 
-    async getBooks(): Promise<[IBookListEntry]> {
+    async getBooks(start:number=0, limit:number=10): Promise<[IBookListEntry]> {
         let path = "/api/books";
-        // let requestData = { towerTypes };
-        let data = await this._executeRequest("get", path);
+        let requestData = { start, limit };
+        let data = await this._executeRequest("get", path, requestData);
         let books = data.list.map((r:any) => r as IBookListEntry);
         return books;
     }
@@ -59,9 +59,10 @@ export default class Api {
         return data as IPageEntry;
     }
 
-    async doRefreshBooks(): Promise<[IBookListEntry]> {
+    async doRefreshBooks(limit:number=10): Promise<[IBookListEntry]> {
         let path = "/api/do/refresh";
-        let data = await this._executeRequest("get", path);
+        let requestData = { limit };
+        let data = await this._executeRequest("get", path, requestData);
         let books = data.list.map((r:any) => r as IBookListEntry);
         return books;
     }

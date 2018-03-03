@@ -24,7 +24,8 @@ export default function ApiController():any {
     });
 
     router.get("/do/refresh", async (req, res, next) => {
-        console.info("GET /api/do/refresh");
+        let limit = parseInt(req.query.limit) || 10;
+        console.info(`GET /api/do/refresh: ${limit}`);
 
         // コンテンツフォルダ以下のディレクトリを再帰的にチェックし、bookのリストを作る
         let bookDir = BookDir.getInstance();
@@ -36,7 +37,7 @@ export default function ApiController():any {
                 // TODO: オプション対応
             }
             // let books = bookDir.getBookList();
-            let books = await Store.getBookList();
+            let books = await Store.getBookList(0, limit);
             responsejson(res, { list: books });
         } catch(ex) {
             console.error(ex);
@@ -45,7 +46,9 @@ export default function ApiController():any {
     });
 
     router.get("/books", async (req, res, next) => {
-        console.info("GET /api/books");
+        let start = parseInt(req.query.start) || 0;
+        let limit = parseInt(req.query.limit) || 10;
+        console.info(`GET /api/books: ${start}, ${limit}`);
 
         let bookDir = BookDir.getInstance();
         try {
@@ -54,7 +57,7 @@ export default function ApiController():any {
                 await bookDir.waitLoading();
             }
             // let books = bookDir.getBookList();
-            let books = await Store.getBookList();
+            let books = await Store.getBookList(start, limit);
             responsejson(res, { list: books });
         } catch(ex) {
             console.error(ex);
@@ -72,8 +75,11 @@ export default function ApiController():any {
                 res.sendStatus(500).end();
                 return;
             }
-            await book.loadPageBody(); //画像データをロード
-            Reading.getInstance().currentBook = book;
+            if (book.pageNum > 3) { //先頭ページを事前ロード
+                await book.getPageImage(0);
+            }
+            // await book.loadPageBody(); //画像データをロード
+            // Reading.getInstance().currentBook = book;
             responsejson(res, book.rawValue);
         } catch(ex) {
             console.error(ex);

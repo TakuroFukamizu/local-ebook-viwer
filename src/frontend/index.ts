@@ -16,12 +16,14 @@ import routes from './routes';
 import StateStore from './model/StateStore';
 
 import App from './components/App';
-import SkFoldingCube from './components/widgets/SkFoldingCube';
+// import SkFoldingCube from './components/widgets/SkFoldingCube';
+// import InfiniteLoading from 'vue-infinite-loading';
 
 // ------------
 
 Vue.component('App', App);
-Vue.component('sk-folding-cube', SkFoldingCube);
+// Vue.component('sk-folding-cube', SkFoldingCube);
+// Vue.component('infinite-loading', InfiniteLoading);
 
 Vue.use(VueMaterial);
 // Vue.material.registerTheme('default', {primary: 'blue'});

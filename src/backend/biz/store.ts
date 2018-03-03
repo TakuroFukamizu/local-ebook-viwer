@@ -49,17 +49,17 @@ class Store {
         });
     }
 
-    allBooks(): Promise<IBookEntry[]> {
+    allBooks(start:number=0, limit:number=10): Promise<IBookEntry[]> {
         return new Promise((resolve, reject) => {
-            this._catalogDB.find({}, (err:Error, docs:IBookEntry[]) => {
+            this._catalogDB.find({}).sort({ title: 1 }).skip(start).limit(limit).exec((err:Error, docs:IBookEntry[]) => {
                 if (err) reject(err);
                 resolve(docs);
             });
         });
     }
 
-    async getBookList(): Promise<IBookListEntry[]> {
-        let books = await this.allBooks();
+    async getBookList(start:number=0, limit:number=10): Promise<IBookListEntry[]> {
+        let books = await this.allBooks(start, limit);
         return books.map((b) => {
             return {
                 id: b.id,

@@ -29,6 +29,7 @@ config `.env` file
 ```sh
 export PORT=58080
 export CONTENST_ROOT=/path/to/documents/root
+export WORKFILE_DIR=/path/to/workfile/dir
 ```
 
 ```sh

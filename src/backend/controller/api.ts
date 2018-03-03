@@ -2,6 +2,7 @@
 
 import * as express from 'express';
 import BookDir from '../biz/bookDir';
+import Store from '../biz/store';
 import Reading from '../biz/reading';
 import {IStatus} from '../../common/apiInterface';
 
@@ -16,7 +17,8 @@ export default function ApiController():any {
 
     router.get("/status", async (req, res, next) => {
         let isStillLoading = BookDir.getInstance().isStillLoading();
-        let bookNum = BookDir.getInstance().bookNum;
+        // let bookNum = BookDir.getInstance().bookNum;
+        let bookNum = await Store.getBookNum();
         let contents = { isStillLoading, bookNum } as IStatus;
         responsejson(res, contents);
     });
@@ -33,7 +35,8 @@ export default function ApiController():any {
                 await bookDir.detectBooks(null, false); //api呼び出しの場合は洗い替えをしない
                 // TODO: オプション対応
             }
-            let books = bookDir.getBookList();
+            // let books = bookDir.getBookList();
+            let books = await Store.getBookList();
             responsejson(res, { list: books });
         } catch(ex) {
             console.error(ex);
@@ -50,7 +53,8 @@ export default function ApiController():any {
                 console.log("isStillLoading");
                 await bookDir.waitLoading();
             }
-            let books = bookDir.getBookList();
+            // let books = bookDir.getBookList();
+            let books = await Store.getBookList();
             responsejson(res, { list: books });
         } catch(ex) {
             console.error(ex);
@@ -61,12 +65,8 @@ export default function ApiController():any {
         let bookId = req.params.id;
         console.info(`GET /api/books/${bookId}`);
 
-        let bookDir = BookDir.getInstance();
         try {
-            if (bookDir.isStillLoading()) {
-                await bookDir.waitLoading();
-            }
-            let book = bookDir.getBook(bookId);
+            let book = await Store.getBook(bookId);
             if (!book) {
                 console.error("book is not found");
                 res.sendStatus(500).end();
@@ -88,9 +88,10 @@ export default function ApiController():any {
         console.info(`GET /api/books/${bookId}/pages/${pageIndex}`);
 
         try {
-            let book = Reading.getInstance().currentBook;
+            // let book = Reading.getInstance().currentBook;
             // TODO: bookIdのチェック
-            let page = book.getPageImage(pageIndex);
+            let book = await Store.getBook(bookId);
+            let page = await book.getPageImage(pageIndex);
             responsejson(res, page);
         } catch(ex) {
             console.error(ex);

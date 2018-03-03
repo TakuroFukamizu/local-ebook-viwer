@@ -3,13 +3,14 @@ import * as sharp from 'sharp';
 import * as uuid from 'node-uuid';
 import {FileInfoItem} from '../utils/fileUtils';
 import {IBookEntry, IPageListEntry, IPageEntry} from '../../common/apiInterface';
+import Store from './store';
 
 const reFileNum = /\D*(\d*)\D*/;
 
 export default class BookModel implements IBookEntry {
     id: string;
-    dirpath: string;
-    dirname: string;
+    dirpath: string = '';
+    dirname: string = '';
     pages: IPageListEntry[] = [];
 
     targetThumbnailSize = 200;
@@ -17,9 +18,11 @@ export default class BookModel implements IBookEntry {
 
     private _images: string[] = [];
 
-    constructor(dirpath:string) {
-        this.dirpath = dirpath;
-        this.dirname = path.basename(dirpath);
+    constructor(dirpath?: string) {
+        if (dirpath) { 
+            this.dirpath = dirpath;
+            this.dirname = path.basename(dirpath);
+        }
     }
 
     get rawValue(): IBookEntry {
@@ -28,6 +31,7 @@ export default class BookModel implements IBookEntry {
             title: this.title,
             dirpath: this.dirpath,
             dirname: this.dirname,
+            thumbnail: this.thumbnail,
             pages: this.pages,
             pageNum: this.pageNum,
             birthTimeMs: this.birthTimeMs,
@@ -35,6 +39,12 @@ export default class BookModel implements IBookEntry {
             modifyTimeMs: this.modifyTimeMs
         }
         return entry;
+    }
+    set rawValue(value: IBookEntry) { 
+        this.id = value.id;
+        this.dirpath = value.dirpath;
+        this.dirname = path.basename(this.dirpath);
+        this.pages = value.pages;
     }
 
     makeNewId() {
@@ -128,19 +138,35 @@ export default class BookModel implements IBookEntry {
         return this.pages;
     }
 
-    getPageImage(index:number):IPageEntry {
-        if(this.pages.length <= index) throw new Error("page not found");
-        let page = this.pages[index];
-        let data = this._images[index];
-        let entry = { 
-            filepath:page.filepath, 
-            name:page.name, 
-            birthTimeMs:page.birthTimeMs,
-            accessTimeMs:page.accessTimeMs,
-            modifyTimeMs:page.modifyTimeMs,
-            mime:page.mime, 
-            data 
-        } as IPageEntry;
-        return entry;
+    async getPageImage(index:number):Promise<IPageEntry> {
+        if (this.pages.length <= index) throw new Error("page not found");
+        // let page = this.pages[index];
+        let page = await Store.getPageImage(this.id, index);
+        if (!page) { 
+            let pl = this.pages[index];
+            let data = await this._createImageBody(pl.filepath, pl.mime);
+            page = { 
+                filepath:pl.filepath, 
+                name:pl.name, 
+                birthTimeMs:pl.birthTimeMs,
+                accessTimeMs:pl.accessTimeMs,
+                modifyTimeMs:pl.modifyTimeMs,
+                mime:pl.mime, 
+                data 
+            } as IPageEntry;
+            Store.addPageImage(this.id, index, page);
+        }
+        // let data = this._images[index];
+        // let entry = { 
+        //     filepath:page.filepath, 
+        //     name:page.name, 
+        //     birthTimeMs:page.birthTimeMs,
+        //     accessTimeMs:page.accessTimeMs,
+        //     modifyTimeMs:page.modifyTimeMs,
+        //     mime:page.mime, 
+        //     data 
+        // } as IPageEntry;
+        // return entry;
+        return page;
     }
 }

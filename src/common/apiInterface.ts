@@ -12,6 +12,7 @@ export interface IBookEntry {
     title: string;
     dirpath: string;
     dirname: string;
+    thumbnail: string;
 
     pages: Array<IPageListEntry>;
 

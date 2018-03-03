@@ -3,8 +3,9 @@ import * as path from 'path';
 import * as events from 'events';
 import {getFileInfo, mimeIsImage, FileInfoItem} from '../utils/fileUtils';
 import {promisify} from 'util';
-import {IBookListEntry} from '../../common/apiInterface';
+// import {IBookListEntry} from '../../common/apiInterface';
 import BookModel from './bookModel';
+import Store from './store';
 
 const readdir = promisify(fs.readdir);
 
@@ -35,9 +36,9 @@ export default class BookDir extends events.EventEmitter {
         this._path = path;
     }
 
-    get bookNum():number {
-        return this._files.length;
-    }
+    // get bookNum():number {
+    //     return this._files.length;
+    // }
 
     isStillLoading() {
         return this._loading;
@@ -123,8 +124,13 @@ export default class BookDir extends events.EventEmitter {
         if (images.length >= 3) { //画像が3枚以上ある
             console.log(images.length, 'image detected', currentDir);
             let entry = new BookModel(currentDir);
-            await entry.addImages(images);
-            entry.makeNewId(); // TODO: DBと照合し、重複なきものだけやる
+            let bookIsExist = await Store.isBookExist(entry);
+            // TODO: 内容の差分確認
+            if (!bookIsExist) { //DBに存在しない場合は取得 
+                await entry.addImages(images);
+                entry.makeNewId();
+                await Store.addBook(entry.rawValue);
+            }
             this._files.push(entry);
             return;
         } else {
@@ -133,25 +139,25 @@ export default class BookDir extends events.EventEmitter {
         }
     }
 
-    getBookList(): Array<IBookListEntry> {
-        return this._files.map((b) => {
-            return {
-                id: b.id,
-                title: b.title,
-                dirpath: b.dirpath,
-                dirname: b.dirname,
-                thumbnail: b.thumbnail,
-                pageNum: b.pageNum,
-                birthTimeMs: b.birthTimeMs,
-                accessTimeMs: b.accessTimeMs,
-                modifyTimeMs: b.modifyTimeMs
-            } as IBookListEntry;
-        });
-    }
+    // getBookList(): Array<IBookListEntry> {
+    //     return this._files.map((b) => {
+    //         return {
+    //             id: b.id,
+    //             title: b.title,
+    //             dirpath: b.dirpath,
+    //             dirname: b.dirname,
+    //             thumbnail: b.thumbnail,
+    //             pageNum: b.pageNum,
+    //             birthTimeMs: b.birthTimeMs,
+    //             accessTimeMs: b.accessTimeMs,
+    //             modifyTimeMs: b.modifyTimeMs
+    //         } as IBookListEntry;
+    //     });
+    // }
 
-    getBook(bookId:string): BookModel | null {
-        let file =  this._files.filter((f) => f.id == bookId); //uuidに変更
-        if (file.length == 0) return null;
-        return file[0];
-    }
+    // getBook(bookId:string): BookModel | null {
+    //     let file =  this._files.filter((f) => f.id == bookId); //uuidに変更
+    //     if (file.length == 0) return null;
+    //     return file[0];
+    // }
 }

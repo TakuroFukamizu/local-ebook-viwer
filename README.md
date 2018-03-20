@@ -44,13 +44,15 @@ open [http://localhost:58080/](http://localhost:58080/)
 ## docker-compose.yml
 
 ```yaml
-version: '2'
+version: '3'
 services:
   node_express:
     build: ./
-    container_name: file_player
+    container_name: ebook
+    env_file: .docker.env
     volumes:
-      - "${CONTENST_ROOT}:/contents"
+      - "${CONTENST_ROOT}:/app/contents"
+      - "${WORKFILE_DIR}:/app/workdir"
     ports:
       - "${PORT}:80"
 ```

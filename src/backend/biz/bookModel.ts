@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as sharp from 'sharp';
-import * as uuid from 'node-uuid';
+import * as uuidv4 from 'uuid/v4';
 import {FileInfoItem} from '../utils/fileUtils';
 import {IBookEntry, IPageListEntry, IPageEntry} from '../../common/apiInterface';
 import Store from './store';
@@ -48,7 +48,7 @@ export default class BookModel implements IBookEntry {
     }
 
     makeNewId() {
-        this.id = uuid.v4();
+        this.id = uuidv4();
     }
 
     get title():string {

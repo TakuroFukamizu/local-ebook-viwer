@@ -39,7 +39,7 @@ div.md-layout.md-gutter.md-alignment-center
 import Vue from 'vue';
 import Component from 'vue-class-component';
 // import InfiniteLoading from 'vue-infinite-loading';
-import infiniteScroll from 'vue-infinite-scroll';
+// import infiniteScroll from 'vue-infinite-scroll';
 import Api from '../api/api';
 import {IBookListEntry} from '../../common/apiInterface';
 

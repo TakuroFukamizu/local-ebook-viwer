@@ -41,7 +41,17 @@ $ npm run start_withenv
 open [http://localhost:58080/](http://localhost:58080/)
 
 
-## docker-compose.yml
+## run on docker
+
+config `.env` file
+
+```sh
+PORT=58080
+CONTENST_ROOT=/path/to/documents/root
+WORKFILE_DIR=/path/to/workfile/dir
+```
+
+config `docker-compose.yml` file
 
 ```yaml
 version: '3'
@@ -49,10 +59,15 @@ services:
   node_express:
     build: ./
     container_name: ebook
-    env_file: .docker.env
     volumes:
       - "${CONTENST_ROOT}:/app/contents"
       - "${WORKFILE_DIR}:/app/workdir"
     ports:
       - "${PORT}:80"
+```
+
+start with docker-compose  
+
+```sh
+$ docker-compose up
 ```

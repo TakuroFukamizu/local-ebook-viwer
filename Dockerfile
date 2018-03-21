@@ -13,8 +13,8 @@ VOLUME ["/app/contents"]
 VOLUME ["/app/workdir"]
 
 ADD package.json /app/source/
-ADD src /app/source/
 ADD webpack.config.js /app/source/
+ADD src /app/source/src
 
 WORKDIR /app/source
 RUN npm i

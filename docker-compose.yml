@@ -3,7 +3,6 @@ services:
   node_express:
     build: ./
     container_name: ebook
-    env_file: .docker.env
     volumes:
       - "${CONTENST_ROOT}:/app/contents"
       - "${WORKFILE_DIR}:/app/workdir"

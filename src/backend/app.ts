@@ -14,26 +14,31 @@ const clientDir = process.env.CLIENT_DIR || path.resolve(__dirname, '../client')
 const contetnsDir = process.env.CONTENST_ROOT || './';
 const workfileDir = process.env.WORKFILE_DIR || './work';
 
+async function boot() { 
+    // load db
+    Store.dbdir = path.join(workfileDir, 'db');
+    await Store.init();
+    
+    // load books from storage
+    let bookDir = BookDir.getInstance();
+    bookDir.setPath(contetnsDir);
+    bookDir.detectBooks().then(async () => {
+        // console.info(`book entory is loaded : ${bookDir.getBookList().length}`);
+        console.info(`book entory is loaded : ${await Store.getBookNum()}`);
+    });
 
-let app = express();
-app.use(cors());
-app.use('/api', ApiController());
-app.use('/static', express.static(clientDir));
-app.use('/', IndexController(clientDir));
+    // boot web app
+    let app = express();
+    app.use(cors());
+    app.use('/api', ApiController());
+    app.use('/static', express.static(clientDir));
+    app.use('/', IndexController(clientDir));
+    const server = app.listen(port, () => {
+        console.info(`Node.js is listening to PORT: ${server.address().port}`);
+    });
+}
+boot();
 
-const server = app.listen(port, () => {
-    console.info(`Node.js is listening to PORT: ${server.address().port}`);
-});
-
-Store.dbdir = path.join(workfileDir, 'db');
-Store.init();
-
-let bookDir = BookDir.getInstance();
-bookDir.setPath(contetnsDir);
-bookDir.detectBooks().then(async () => {
-    // console.info(`book entory is loaded : ${bookDir.getBookList().length}`);
-    console.info(`book entory is loaded : ${await Store.getBookNum()}`);
-});
 // const skillWatchDir = new WatchDir(contetnsDir);
 // skillWatchDir.on(WatchDir.EVENT_NEW_FILE, (file) => {
 //     console.log(file);

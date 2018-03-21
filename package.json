@@ -10,7 +10,7 @@
     "build:frontend": "$(npm bin)/webpack",
     "build:backend": "$(npm bin)/tsc --project ./src/backend",
     "start": "node ./dist/backend/app.js",
-    "start_withenv": "source ./.env && node ./dist/backend/app.js",
+    "start_withenv": "source ./.env && npm run start",
     "clean": "rimraf ./dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

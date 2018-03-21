@@ -14,15 +14,29 @@ class Store {
     private _catalogDB: Datastore;
     private _imageCacheDB: Datastore;
 
-    init() { 
+    async init(): Promise<void> { 
+        console.log("start load db");
         this._catalogDB = new Datastore({ 
             filename: path.join(this.dbdir,'catalog.db'),
-            autoload: true
+            autoload: false
         });
         this._imageCacheDB = new Datastore({ 
             filename: path.join(this.dbdir,'imageCache.db'),
-            autoload: true
+            autoload: false
         });
+
+        // load
+        await this.loadDb(this._catalogDB);
+        await this.loadDb(this._imageCacheDB);
+    }
+
+    private async loadDb(db: Datastore): Promise<{}> { 
+        return new Promise((resolve, reject) => {
+            db.loadDatabase((err) => {
+                if (err) reject(err);
+                resolve();
+            });
+        })
     }
 
     

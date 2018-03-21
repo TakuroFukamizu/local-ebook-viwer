@@ -1,4 +1,4 @@
-import * as Datastore from 'nedb';
+import * as Datastore from 'nedb-fsync';
 import * as path from 'path';
 import BookModel from './bookModel';
 import {IBookEntry, IBookListEntry, IPageEntry} from '../../common/apiInterface';

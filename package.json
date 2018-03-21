@@ -1,7 +1,7 @@
 {
   "name": "local-ebook-viwer",
   "version": "1.0.0",
-  "description": "",
+  "description": "ebook viewer web application for your local network.",
   "main": "index.js",
   "scripts": {
     "dev:frontend": "source ./.env && export NODE_ENV='development' && webpack-dev-server --inline --hot",
@@ -14,7 +14,11 @@
     "clean": "rimraf ./dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "takuro.f.1987@gmail.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TakuroFukamizu/local-ebook-viwer.git"
+  },
   "license": "ISC",
   "dependencies": {
     "axios": "^0.18.0",

@@ -8,7 +8,7 @@ import BookModel from './bookModel';
 import Store from './store';
 
 const readdir = promisify(fs.readdir);
-
+const readFile = promisify(fs.readFile);
 
 export default class BookDir extends events.EventEmitter {
     private static _instance: BookDir;
@@ -88,6 +88,7 @@ export default class BookDir extends events.EventEmitter {
         })
         let dirs: Array<string> = [];
         let images: Array<FileInfoItem> = [];
+        let metaFilePath: string | null = null;
         let hasHtml = false;
         for(let f of files) {
             let filepath = path.join(currentDir, f);
@@ -95,12 +96,15 @@ export default class BookDir extends events.EventEmitter {
 
             if (fileinfo.isDirecotry) {
                 dirs.push(filepath);
-            } else if(path.extname(f) == '.html' || path.extname(f) == '.htm') {
+            } else if (path.extname(f) == '.html' || path.extname(f) == '.htm') {
                 hasHtml = true;
                 // continue;
                 break;
+            } else if (f == 'meta.json') {
+                metaFilePath = filepath;
+                continue;
             } else if (fileinfo.mime == null || !mimeIsImage(fileinfo.mime)) {
-                console.log(fileinfo.mime, fileinfo.name);
+                console.log('unhandled type: ', fileinfo.mime, fileinfo.name);
                 continue;
             } else {
                 images.push(fileinfo);
@@ -124,12 +128,34 @@ export default class BookDir extends events.EventEmitter {
         if (images.length >= 3) { //画像が3枚以上ある
             console.log(images.length, 'image detected', currentDir);
             let entry = new BookModel(currentDir);
+            
+            if (metaFilePath) {
+                // FIXME: meta.jsonを読み込んでDBに保存
+                const metaObj = JSON.parse(await readFile(metaFilePath, 'utf8'));
+                console.log(metaObj.distribution_title, metaObj.distribution_url, metaObj.private.comment, metaObj.private['tag-list']);
+                if (metaObj.private['tag-list']) { 
+                    entry.tags = metaObj.private['tag-list'].map((v: any) => v.title);
+                    entry.tagsAll = entry.tags.join(',');
+                }
+                if (metaObj.private['comment']) { 
+                    entry.comment = metaObj.private.comment;
+                }
+            }
+
             let bookIsExist = await Store.isBookExist(entry);
             // TODO: 内容の差分確認
             if (!bookIsExist) { //DBに存在しない場合は取得 
                 await entry.addImages(images);
                 entry.makeNewId();
                 await Store.addBook(entry.rawValue);
+            } else { 
+                const book = await Store.getBookByDirpath(entry.dirpath);
+                if (metaFilePath) {
+                    book.tags = entry.tags;
+                    book.tagsAll = entry.tagsAll;
+                    book.comment = entry.comment;
+                }
+                await Store.updateBook(book);
             }
             this._files.push(entry);
             return;

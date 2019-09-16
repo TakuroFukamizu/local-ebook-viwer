@@ -20,7 +20,7 @@ $ npm run dev:backend
 $ npm run dev:frontend
 ```
 
-open [http://localhost:4000/](http://localhost:4000/)
+open [http://localhost:4000/static/index.html#/](http://localhost:4000/static/index.html#/)
 
 ## run in local pc (production build)
 

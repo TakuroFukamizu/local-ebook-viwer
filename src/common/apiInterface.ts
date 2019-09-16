@@ -16,10 +16,17 @@ export interface IBookEntry {
 
     pages: Array<IPageListEntry>;
 
+    tags: Array<string>;
+    tagsAll: string;
+
     pageNum: number;
     birthTimeMs: number;
     accessTimeMs: number; //最終アクセス時刻 (access time)
     modifyTimeMs: number; //最終変更時刻 (modify time)
+
+    comment: string;
+    readCount: number; //視聴回数
+    isBookmarked: boolean; //ブックマーク
 }
 
 export interface IPageListEntry {
@@ -58,5 +65,8 @@ export interface IBookListEntry {
     birthTimeMs: number;
     accessTimeMs: number; //最終アクセス時刻 (access time)
     modifyTimeMs: number; //最終変更時刻 (modify time)
+
+    readCount: number; //視聴回数
+    isBookmarked: boolean; //ブックマーク
 }
 

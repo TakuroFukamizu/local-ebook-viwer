@@ -12,6 +12,12 @@ export default class BookModel implements IBookEntry {
     dirpath: string = '';
     dirname: string = '';
     pages: IPageListEntry[] = [];
+    tags: string[] = [];
+    tagsAll: string = '';
+
+    comment: string = '';
+    readCount: number = 0;
+    isBookmarked: boolean = false;
 
     targetThumbnailSize = 200;
     targetImageSize = 1024;
@@ -34,9 +40,14 @@ export default class BookModel implements IBookEntry {
             thumbnail: this.thumbnail,
             pages: this.pages,
             pageNum: this.pageNum,
+            tags: this.tags,
+            tagsAll: this.tagsAll,
             birthTimeMs: this.birthTimeMs,
             accessTimeMs: this.accessTimeMs,
-            modifyTimeMs: this.modifyTimeMs
+            modifyTimeMs: this.modifyTimeMs,
+            comment: this.comment,
+            readCount: this.readCount,
+            isBookmarked: this.isBookmarked,
         }
         return entry;
     }
@@ -45,6 +56,11 @@ export default class BookModel implements IBookEntry {
         this.dirpath = value.dirpath;
         this.dirname = path.basename(this.dirpath);
         this.pages = value.pages;
+        this.tags = value.tags;
+        this.tagsAll = value.tagsAll;
+        this.comment = value.comment;
+        this.readCount = value.readCount;
+        this.isBookmarked = value.isBookmarked;
     }
 
     makeNewId() {
@@ -92,6 +108,12 @@ export default class BookModel implements IBookEntry {
             } as IPageListEntry;
             this.pages.push(entry);
         }
+    }
+
+    /* 視聴回数をカウントアップ */
+    upReadCount() { 
+        if (!this.readCount) this.readCount = 0;
+        this.readCount++;
     }
 
     private _sortPage(imagePaths:Array<FileInfoItem>) {

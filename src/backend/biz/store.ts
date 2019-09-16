@@ -9,6 +9,8 @@ interface IPageDbEntry {
     page: IPageEntry;
 }
 
+export enum BookSortBy { Title, CreatedByDesc, ReadCountDesc };
+
 class Store {
     dbdir: string = './';
     private _catalogDB: Datastore;
@@ -54,6 +56,7 @@ class Store {
         });
     }
 
+    /** 新しい本を追加する */
     addBook(doc: IBookEntry) {
         return new Promise((resolve, reject) => {
             this._catalogDB.insert(doc, (err, newDoc:IBookEntry) => { 
@@ -63,17 +66,36 @@ class Store {
         });
     }
 
-    allBooks(start:number=0, limit:number=10): Promise<IBookEntry[]> {
+    allBooks(start:number=0, limit:number=10, sortBy:BookSortBy=BookSortBy.Title, searchKeywrod:string|null=null): Promise<IBookEntry[]> {
         return new Promise((resolve, reject) => {
-            this._catalogDB.find({}).sort({ title: 1 }).skip(start).limit(limit).exec((err:Error, docs:IBookEntry[]) => {
+            let sortCondition;
+            switch (sortBy) { 
+                case BookSortBy.Title: sortCondition = { title: 1 }; break;
+                case BookSortBy.CreatedByDesc: sortCondition = { birthTimeMs: -1 }; break;
+                case BookSortBy.ReadCountDesc: sortCondition = { readCount: -1 }; break;
+                default: sortCondition = { title: 1 }; break;
+            }
+            let searchCondition = {};
+            if (searchKeywrod) { 
+                searchCondition = {
+                    $or: [
+                        { title: searchKeywrod },
+                        { dirname: searchKeywrod },
+                        { tagsAll: searchKeywrod }
+                    ]
+                }
+            }
+            console.log('allBooks', sortCondition, start, limit);
+            this._catalogDB.find(searchCondition).sort(sortCondition).skip(start).limit(limit).exec((err:Error, docs:IBookEntry[]) => {
                 if (err) reject(err);
+                console.log(docs.map((v) => { return { dirpath:v.dirpath, title:v.title, pageNum:v.pageNum, readCount:v.readCount, isBookmarked:v.isBookmarked } }));
                 resolve(docs);
             });
         });
     }
 
-    async getBookList(start:number=0, limit:number=10): Promise<IBookListEntry[]> {
-        let books = await this.allBooks(start, limit);
+    async getBookList(start:number=0, limit:number=10, sortBy:BookSortBy=BookSortBy.Title): Promise<IBookListEntry[]> {
+        let books = await this.allBooks(start, limit, sortBy);
         return books.map((b) => {
             return {
                 id: b.id,
@@ -84,7 +106,9 @@ class Store {
                 pageNum: b.pageNum,
                 birthTimeMs: b.birthTimeMs,
                 accessTimeMs: b.accessTimeMs,
-                modifyTimeMs: b.modifyTimeMs
+                modifyTimeMs: b.modifyTimeMs,
+                readCount: b.readCount || 0,
+                isBookmarked: b.isBookmarked || false,
             } as IBookListEntry;
         });
     }
@@ -104,6 +128,43 @@ class Store {
                 }
             });
         });
+    }
+
+    getBookByDirpath(dirpath:string): Promise<BookModel> {
+        return new Promise((resolve, reject) => {
+            let condition = { dirpath: dirpath };
+            this._catalogDB.findOne(condition, (err, doc:IBookEntry|null) => {
+                if (err) reject(err);
+                if (doc == null) {
+                    // 見つからない
+                    reject(new Error("book is not found"));
+                } else { 
+                    let book = new BookModel();
+                    book.rawValue = doc;
+                    resolve(book);
+                }
+            });
+        });
+    }
+
+    /** 既存の本を更新する */
+    updateBook(doc: IBookEntry) {
+        console.log('updateBook', doc.dirpath, doc.readCount, doc.isBookmarked);
+        return new Promise((resolve, reject) => {
+            const condition = { id: doc.id };
+            this._catalogDB.update(condition, { $set: doc }, { multi: true }, (err) => { 
+                //err, numAffected, affectedDocuments, upsert
+                if (err) reject(err);
+                resolve();
+            });
+        });
+    }
+
+    /** 視聴回数を更新する */
+    async setBookReadCount(bookId: string) { 
+        const doc = await this.getBook(bookId);
+        doc.upReadCount();
+        await this.updateBook(doc);
     }
 
     getBookNum(): Promise<number> { 

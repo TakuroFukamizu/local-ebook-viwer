@@ -2,7 +2,7 @@
 
 import * as express from 'express';
 import BookDir from '../biz/bookDir';
-import Store from '../biz/store';
+import Store, {BookSortBy} from '../biz/store';
 // import Reading from '../biz/reading';
 import {IStatus} from '../../common/apiInterface';
 
@@ -46,9 +46,11 @@ export default function ApiController():any {
     });
 
     router.get("/books", async (req, res, next) => {
-        let start = parseInt(req.query.start) || 0;
-        let limit = parseInt(req.query.limit) || 10;
-        console.info(`GET /api/books: ${start}, ${limit}`);
+        const start = parseInt(req.query.start) || 0;
+        const limit = parseInt(req.query.limit) || 10;
+        const sort = req.query.sortBy || "title";
+        const keyword = req.query.keyword || null;
+        console.info(`GET /api/books: ${start}, ${limit}, ${sort}, ${keyword}`);
 
         let bookDir = BookDir.getInstance();
         try {
@@ -57,13 +59,20 @@ export default function ApiController():any {
                 await bookDir.waitLoading();
             }
             // let books = bookDir.getBookList();
-            let books = await Store.getBookList(start, limit);
+            let sortBy = BookSortBy.Title;
+            switch (sort) {
+                case "title": sortBy = BookSortBy.Title; break;
+                case "created_desc": sortBy = BookSortBy.CreatedByDesc; break;
+                case "read_count_desc": sortBy = BookSortBy.ReadCountDesc; break;
+            }
+            let books = await Store.getBookList(start, limit, sortBy, keyword);
             responsejson(res, { list: books });
         } catch(ex) {
             console.error(ex);
             res.sendStatus(500).end();
         }
     });
+
     router.get("/books/:id", async (req, res, next) => {
         let bookId = req.params.id;
         console.info(`GET /api/books/${bookId}`);
@@ -78,6 +87,8 @@ export default function ApiController():any {
             if (book.pageNum > 3) { //先頭ページを事前ロード
                 await book.getPageImage(0);
             }
+            // 視聴回数をカウントアップ
+            await Store.setBookReadCount(book.id);
             // await book.loadPageBody(); //画像データをロード
             // Reading.getInstance().currentBook = book;
             responsejson(res, book.rawValue);
@@ -86,7 +97,6 @@ export default function ApiController():any {
             res.sendStatus(500).end();
         }
     });
-
 
     router.get("/books/:id/pages/:index", async (req, res, next) => {
         let bookId = req.params.id;
@@ -99,6 +109,28 @@ export default function ApiController():any {
             let book = await Store.getBook(bookId);
             let page = await book.getPageImage(pageIndex);
             responsejson(res, page);
+        } catch(ex) {
+            console.error(ex);
+            res.sendStatus(500).end();
+        }
+    });
+
+    router.post("/books/:id/fav", async (req, res, next) => {
+        let bookId = req.params.id;
+        let target = req.body.target;
+        let value = req.body.value || true;
+        console.info(`POST /api/books/${bookId}/fav`, target, value);
+
+        try {
+            let book = await Store.getBook(bookId);
+            if (!book) {
+                console.error("book is not found");
+                res.sendStatus(500).end();
+                return;
+            }
+            book.isBookmarked = value;
+            await Store.updateBook(book);
+            res.sendStatus(200).end();
         } catch(ex) {
             console.error(ex);
             res.sendStatus(500).end();

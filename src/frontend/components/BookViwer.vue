@@ -1,22 +1,43 @@
 <template lang='pug'>
 div
     .book-page.md-layout.md-gutter.md-alignment-center-center
-        .page-body.md-layout-item
-            div(style="margin-left:auto; margin-right:auto;" v-touch:swipe="onSwipe")
-                img(v-bind:src="currentPage.data")
+        .md-layout-item.md-small-hide
+            div(v-on:click="prev")
+                md-icon keyboard_arrow_left
+        .md-layout-item
+            .md-caption
+                div {{book.dirname}}
+                div(v-if="book.comment") {{book.comment}}
+                div
+                    span(v-for="tag in book.tags") {{ tag }},
+            .page-body
+                div(style="margin-left:auto; margin-right:auto;" v-touch:swipe="onSwipe")
+                    img(v-bind:src="currentPage.data" style="max-height:100vh; width:auto; height:auto;")
             //- div.md-caption {{currentPage.filepath}}
             //- div.md-caption {{currentPage.name}}
+        .md-layout-item.md-small-hide
+            div(v-on:click="next")
+                md-icon keyboard_arrow_right
     .md-layout.md-alignment-center-bottom(style="margin-top:20px;")
-        .md-layout-item(style="text-align:center;")
+        .md-layout-item.md-size-100(style="text-align:center;")
             div {{currentPageIndex + 1}} / {{maxPage}}
             md-progress-bar(md-mode="determinate", :md-value="pageProgress")
+        .md-layout-item.md-small-size-100.md-layout.md-alignment-center-bottom
+            .md-laytou-item(v-on:click="prev" style="width:25vw; text-align:center;")
+                md-icon keyboard_arrow_left
+                span Prev
+            .md-laytou-item(style="width:35vw; text-align:center;")
+                span |
+            .md-laytou-item(v-on:click="next" style="width:25vw; text-align:center;")
+                span Next
+                md-icon keyboard_arrow_right
     md-speed-dial.md-bottom-right(md-event="click")
         md-speed-dial-target
             md-icon add
         md-speed-dial-content
             md-button.md-icon-button
                 md-icon note
-            md-button.md-icon-button
+            md-button.md-icon-button(v-on:click="addBookmark")
                 md-icon favorite
             md-button.md-icon-button(v-on:click="backToHome()")
                 md-icon close
@@ -239,6 +260,10 @@ export default class BookViwer extends Vue {
             this.currentPageIndex = value;
             this.pageProgress = ((value + 1) / this.maxPage) * 100;
         });
+    }
+
+    addBookmark() {
+        this._api.setFav(this._bookId);
     }
 
     backToHome() {

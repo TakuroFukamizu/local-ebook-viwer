@@ -34,6 +34,7 @@ import Component from 'vue-class-component';
 @Component({})
 export default class App extends Vue {
     menuVisible = false;
+    rightMenuVisible = false;
 
     naviTitle():string {
         return this.$store.state.naviTitle;

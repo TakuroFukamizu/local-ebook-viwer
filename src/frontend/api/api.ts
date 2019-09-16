@@ -26,6 +26,7 @@ export default class Api {
             "Accept": "application/json",
             "Content-Type": "application/json"
         };
+        console.log("Api._executeRequest", config);
         return axios.request(config).then((response) => {
             if (response.status != 200) throw new Error(response.statusText);
             return response.data;
@@ -39,9 +40,12 @@ export default class Api {
         return data as IStatus;
     }
 
-    async getBooks(start:number=0, limit:number=10): Promise<[IBookListEntry]> {
+    async getBooks(start:number=0, limit:number=10, sortBy:string="title", keyword:string|null=null): Promise<[IBookListEntry]> {
         let path = "/api/books";
-        let requestData = { start, limit };
+        let requestData:any = { start, limit, sortBy };
+        if(keyword) {
+            requestData.keyword = keyword;
+        }
         let data = await this._executeRequest("get", path, requestData);
         let books = data.list.map((r:any) => r as IBookListEntry);
         return books;
@@ -57,6 +61,12 @@ export default class Api {
         let path = `/api/books/${bookId}/pages/${pageIndex}`;
         let data = await this._executeRequest("get", path);
         return data as IPageEntry;
+    }
+    
+    async setFav(bookId: string): Promise<boolean> {
+        let path = `/api/books/${bookId}/fav`;
+        await this._executeRequest("post", path, { target: 'defaults', value: true });
+        return true;
     }
 
     async doRefreshBooks(limit:number=10): Promise<[IBookListEntry]> {
